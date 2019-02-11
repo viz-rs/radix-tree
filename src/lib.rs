@@ -65,12 +65,12 @@ impl<T> Node<T> {
             let mut path = path.split_off(i);
             let c = path[0];
 
-            let mut k = 0;
-            while k < self.indices.len() {
-                if c == self.indices[k] {
-                    return self.nodes[k].insert_with(&mut path, data);
+            let mut j = 0;
+            while j < self.indices.len() {
+                if c == self.indices[j] {
+                    return self.nodes[j].insert_with(&mut path, data);
                 }
-                k += 1;
+                j += 1;
             }
 
             self.indices.push(c);
@@ -103,12 +103,12 @@ impl<T> Node<T> {
         let mut path = path.split_off(i);
         let c = path[0];
 
-        let mut k = 0;
-        while k < self.indices.len() {
-            if c == self.indices[k] {
-                return self.nodes[k].find_with(&mut path);
+        let mut j = 0;
+        while j < self.indices.len() {
+            if c == self.indices[j] {
+                return self.nodes[j].find_with(&mut path);
             }
-            k += 1;
+            j += 1;
         }
 
         None

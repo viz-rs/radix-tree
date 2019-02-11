@@ -2,6 +2,11 @@
 
 A [radix tree] implementation for router, path search.
 
+[![Build Status](https://travis-ci.com/trek-rs/radix-tree.svg?branch=master)](https://travis-ci.com/trek-rs/radix-tree)
+[![Latest version](https://img.shields.io/crates/v/radix-tree.svg)](https://crates.io/crates/radix-tree)
+[![Documentation](https://docs.rs/radix-tree/badge.svg)](https://docs.rs/radix-tree)
+![License](https://img.shields.io/crates/l/radix-tree.svg)
+
 ## Usage
 
 ```rust
@@ -58,19 +63,19 @@ assert_eq!(node.is_none(), true);
 
 It is inspired by the:
 
-* [rax]
-* [httprouter]
-* [echo] router
-* [trekjs] router
+- [rax]
+- [httprouter]
+- [echo] router
+- [trekjs] router
 
 ## License
 
 This project is licensed under either of
 
- * Apache License, Version 2.0, ([LICENSE-APACHE](LICENSE-APACHE) or
-   http://www.apache.org/licenses/LICENSE-2.0)
- * MIT license ([LICENSE-MIT](LICENSE-MIT) or
-   http://opensource.org/licenses/MIT)
+- Apache License, Version 2.0, ([LICENSE-APACHE](LICENSE-APACHE) or
+  http://www.apache.org/licenses/LICENSE-2.0)
+- MIT license ([LICENSE-MIT](LICENSE-MIT) or
+  http://opensource.org/licenses/MIT)
 
 at your option.
 
