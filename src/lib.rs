@@ -24,14 +24,14 @@ impl<T> Node<T> {
         }
     }
 
-    pub fn insert_with(&mut self, path: &mut Vec<u8>, data: T) {
+    pub fn insert_with(&mut self, path: &mut Vec<u8>, data: Option<T>) {
         let sl = path.len();
         let pl = self.path.len();
         let max = sl.min(pl);
 
         if (max | pl | self.indices.len()) == 0 {
             self.path = path.to_vec();
-            self.data = Some(data);
+            self.data = data;
             return;
         }
 
@@ -59,7 +59,7 @@ impl<T> Node<T> {
         }
 
         if i == sl {
-            self.data = Some(data);
+            self.data = data;
         } else {
             // New Node
             let mut path = path.split_off(i);
@@ -76,7 +76,7 @@ impl<T> Node<T> {
             self.indices.push(c);
             self.nodes.push(Node {
                 path,
-                data: Some(data),
+                data: data,
                 nodes: Vec::new(),
                 indices: Vec::new(),
             });
@@ -118,7 +118,7 @@ impl<T> Node<T> {
 impl<T> Radix<T> for Node<T> {
     fn insert(&mut self, path: &str, data: T) {
         let mut path = path.as_bytes().to_vec();
-        self.insert_with(&mut path, data);
+        self.insert_with(&mut path, Some(data))
     }
 
     fn find(&self, path: &str) -> Option<&Node<T>> {
