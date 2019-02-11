@@ -76,7 +76,7 @@ impl<T> Node<T> {
             self.indices.push(c);
             self.nodes.push(Node {
                 path,
-                data: data,
+                data,
                 nodes: Vec::new(),
                 indices: Vec::new(),
             });
