@@ -2,7 +2,7 @@
 
 A [radix tree] implementation for router, path search.
 
-[![Build Status](https://travis-ci.com/trek-rs/radix-tree.svg?branch=master)](https://travis-ci.com/trek-rs/radix-tree)
+[![Build Status](https://travis-ci.org/trek-rs/radix-tree.svg?branch=master)](https://travis-ci.org/trek-rs/radix-tree)
 [![Latest version](https://img.shields.io/crates/v/radix-tree.svg)](https://crates.io/crates/radix-tree)
 [![Documentation](https://docs.rs/radix-tree/badge.svg)](https://docs.rs/radix-tree)
 ![License](https://img.shields.io/crates/l/radix-tree.svg)
