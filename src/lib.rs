@@ -25,12 +25,12 @@ impl<T> Node<T> {
     }
 
     pub fn insert_with(&mut self, path: &mut Vec<u8>, data: Option<T>) {
-        let sl = path.len();
-        let pl = self.path.len();
-        let max = sl.min(pl);
+        let pl = path.len();
+        let sl = self.path.len();
+        let max = pl.min(sl);
 
-        if (max | pl | self.indices.len()) == 0 {
-            self.path = path.to_vec();
+        if (max | sl | self.indices.len()) == 0 {
+            self.path = path.to_owned();
             self.data = data;
             return;
         }
@@ -41,7 +41,7 @@ impl<T> Node<T> {
         }
 
         // Split Node
-        if i < pl {
+        if i < sl {
             let mut child = Node {
                 nodes: Vec::new(),
                 indices: Vec::new(),
@@ -53,12 +53,12 @@ impl<T> Node<T> {
             mem::swap(&mut self.indices, &mut child.indices);
 
             let c = child.path[0];
-            self.data = None;
+            // self.data has been taken away, so dont need set `self.data = None;`
             self.indices.push(c);
             self.nodes.push(child);
         }
 
-        if i == sl {
+        if i == pl {
             self.data = data;
         } else {
             // New Node
@@ -84,19 +84,19 @@ impl<T> Node<T> {
     }
 
     pub fn find_with(&self, path: &mut Vec<u8>) -> Option<&Node<T>> {
-        let sl = path.len();
-        let pl = self.path.len();
+        let pl = path.len();
+        let sl = self.path.len();
 
-        if sl < pl {
+        if pl < sl {
             return None;
         }
 
         let mut i = 0;
-        while i < pl && path[i] == self.path[i] {
+        while i < sl && path[i] == self.path[i] {
             i += 1;
         }
 
-        if i == sl && sl == pl {
+        if i == pl && pl == sl {
             return Some(self);
         }
 
@@ -117,13 +117,11 @@ impl<T> Node<T> {
 
 impl<T> Radix<T> for Node<T> {
     fn insert(&mut self, path: &str, data: T) {
-        let mut path = path.as_bytes().to_vec();
-        self.insert_with(&mut path, Some(data))
+        self.insert_with(&mut path.as_bytes().to_owned(), Some(data))
     }
 
     fn find(&self, path: &str) -> Option<&Node<T>> {
-        let mut path = path.as_bytes().to_vec();
-        self.find_with(&mut path)
+        self.find_with(&mut path.as_bytes().to_owned())
     }
 
     #[allow(unused_variables)]
