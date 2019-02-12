@@ -24,22 +24,24 @@ impl<T> Node<T> {
         }
     }
 
+    // Insert with `&mut Vec<u8>` path and `Option<T>` data
     pub fn insert_with(&mut self, path: &mut Vec<u8>, data: Option<T>) {
-        let pl = path.len();
+        // empty node
         let sl = self.path.len();
-        let max = pl.min(sl);
-
-        if (max | sl | self.indices.len()) == 0 {
-            self.path = path.to_owned();
+        if (sl | self.indices.len()) == 0 {
             self.data = data;
+            self.path = path.to_owned();
             return;
         }
 
+        let pl = path.len();
+        let max = pl.min(sl);
         let mut i = 0;
         while i < max && path[i] == self.path[i] {
             i += 1;
         }
 
+        // "abc" < "abcde"
         // Split Node
         if i < sl {
             let mut child = Node {
@@ -52,65 +54,73 @@ impl<T> Node<T> {
             mem::swap(&mut self.nodes, &mut child.nodes);
             mem::swap(&mut self.indices, &mut child.indices);
 
-            let c = child.path[0];
-            // self.data has been taken away, so dont need set `self.data = None;`
-            self.indices.push(c);
+            // `self.data` and `self.path` have been taken away
+            // so dont need set `self.data = None;`
+            self.indices.push(child.path[0]);
             self.nodes.push(child);
         }
 
+        // "abc" == "abc"
         if i == pl {
             self.data = data;
-        } else {
-            // New Node
-            let mut path = path.split_off(i);
-            let c = path[0];
-
-            let mut j = 0;
-            while j < self.indices.len() {
-                if c == self.indices[j] {
-                    return self.nodes[j].insert_with(&mut path, data);
-                }
-                j += 1;
-            }
-
-            self.indices.push(c);
-            self.nodes.push(Node {
-                path,
-                data,
-                nodes: Vec::new(),
-                indices: Vec::new(),
-            });
+            return;
         }
+
+        // "abcde" > "abc"
+        // New Node
+        let l = self.indices.len();
+        let c = path[i];
+        let mut j = 0;
+        while j < l {
+            if c == self.indices[j] {
+                return self.nodes[j].insert_with(&mut path.split_off(i), data);
+            }
+            j += 1;
+        }
+
+        self.indices.push(c);
+        self.nodes.push(Node {
+            data,
+            nodes: Vec::new(),
+            indices: Vec::new(),
+            path: path.split_off(i),
+        });
     }
 
+    // Find with `&mut Vec<u8>` path
     pub fn find_with(&self, path: &mut Vec<u8>) -> Option<&Node<T>> {
         let pl = path.len();
         let sl = self.path.len();
 
+        // "abc" < "abcde"
+        // not found
         if pl < sl {
             return None;
         }
 
+        // "abcde" > "abc" or "abc" == "abc"
         let mut i = 0;
         while i < sl && path[i] == self.path[i] {
             i += 1;
         }
 
-        if i == pl && pl == sl {
+        // "abc" == "abc"
+        if i == sl && sl == pl {
             return Some(self);
         }
 
-        let mut path = path.split_off(i);
-        let c = path[0];
-
+        // "abcde" > "abc"
+        let l = self.indices.len();
+        let c = path[i];
         let mut j = 0;
-        while j < self.indices.len() {
+        while j < l {
             if c == self.indices[j] {
-                return self.nodes[j].find_with(&mut path);
+                return self.nodes[j].find_with(&mut path.split_off(i));
             }
             j += 1;
         }
 
+        // not found
         None
     }
 }
