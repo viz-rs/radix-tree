@@ -270,5 +270,18 @@ mod tests {
         let node = tree.find("你");
         assert_eq!(node.is_some(), true);
         assert_eq!(node.unwrap().data.unwrap(), true);
+
+        let node = tree.find("你好");
+        assert_eq!(node.is_some(), true);
+        assert_eq!(node.unwrap().data.unwrap(), true);
+
+        let node = tree.find("语言");
+        assert_eq!(node.is_some(), false);
+
+        let node = tree.find("你好，世界");
+        assert_eq!(node.is_some(), true);
+
+        let node = tree.find("你好，世界 Rust");
+        assert_eq!(node.is_some(), false);
     }
 }
