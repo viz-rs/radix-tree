@@ -162,12 +162,12 @@ mod tests {
                 let n = &self.nodes[j];
                 let mut c = i;
                 let s = format!(
-                    "{}`{}-({}) [{}] --> [{}] []={}",
+                    "{}`{:?}-({}) {:?} --> {:?} []={}",
                     " ".repeat(c),
-                    String::from_utf8(self.path.to_owned()).unwrap(),
+                    self.path.to_vec(),
                     *k as char,
-                    String::from_utf8(n.path[1..].to_vec()).unwrap(),
-                    String::from_utf8(n.indices.to_vec()).unwrap(),
+                    n.path[1..].to_vec(),
+                    n.indices.to_vec(),
                     n.data.is_some(),
                 );
                 c += s.len() - 5 - c;
@@ -234,6 +234,12 @@ mod tests {
             true,
             "ba",
             true,
+            "你好，世界",
+            true,
+            "你好",
+            true,
+            "你",
+            true,
         );
 
         find!(
@@ -260,5 +266,9 @@ mod tests {
 
         let node = tree.find("dota2");
         assert_eq!(node.is_none(), true);
+
+        let node = tree.find("你");
+        assert_eq!(node.is_some(), true);
+        assert_eq!(node.unwrap().data.unwrap(), true);
     }
 }
