@@ -157,9 +157,9 @@ mod tests {
         pub fn print_nodes(&self, i: usize) {
             if self.nodes.len() == 0 {
                 let s = format!(
-                    "{}`{}-({}) [{}] --> [{}] []={}",
+                    "{}`{:?}-({}) [{}] --> [{}] []={}",
                     " ".repeat(i),
-                    String::from_utf8(self.path.to_owned()).unwrap(),
+                    self.path.to_vec(),
                     "",
                     "",
                     "",
@@ -176,7 +176,7 @@ mod tests {
                     "{}`{:?}-({}) {:?} --> {:?} []={}",
                     " ".repeat(c),
                     self.path.to_vec(),
-                    *k as char,
+                    *k as u32,
                     n.path[1..].to_vec(),
                     n.indices.to_vec(),
                     n.data.is_some(),
