@@ -2,9 +2,10 @@ use std::mem;
 
 pub trait Radix<T> {
     fn remove(&mut self, path: &str);
-    fn insert(&mut self, path: &str, data: T);
+    fn insert(&mut self, path: &str, data: T) -> &mut Node<T>;
     fn find(&self, path: &str) -> Option<&Node<T>>;
     fn add_node(&mut self, path: &str, data: T) -> &mut Node<T>;
+    fn find_node(&self, path: &str) -> Option<&Node<T>>;
 }
 
 #[derive(Debug)]
@@ -90,23 +91,16 @@ impl<T> Node<T> {
         }
 
         // "abc" == "abc"
-        if i == sl && sl == pl {
-            return Some(self);
+        if pl == sl {
+            if i == pl {
+                return Some(self);
+            }
+            // not found
+            return None;
         }
 
         // "abcde" > "abc"
-        let l = self.indices.len();
-        let c = path[i];
-        let mut j = 0;
-        while j < l {
-            if c == self.indices[j] {
-                return self.nodes[j].find_with(&mut path.split_off(i));
-            }
-            j += 1;
-        }
-
-        // not found
-        None
+        self.find_node_with(path, i)
     }
 
     pub fn add_node_with(&mut self, path: &mut Vec<u8>, data: Option<T>, i: usize) -> &mut Node<T> {
@@ -130,14 +124,29 @@ impl<T> Node<T> {
 
         &mut self.nodes[l]
     }
+
+    pub fn find_node_with(&self, path: &mut Vec<u8>, i: usize) -> Option<&Node<T>> {
+        let l = self.indices.len();
+        let c = path[i];
+        let mut j = 0;
+        while j < l {
+            if c == self.indices[j] {
+                return self.nodes[j].find_with(&mut path.split_off(i));
+            }
+            j += 1;
+        }
+
+        // not found
+        None
+    }
 }
 
 impl<T> Radix<T> for Node<T> {
     #[allow(unused_variables)]
     fn remove(&mut self, path: &str) {}
 
-    fn insert(&mut self, path: &str, data: T) {
-        self.insert_with(&mut path.as_bytes().to_owned(), Some(data));
+    fn insert(&mut self, path: &str, data: T) -> &mut Node<T> {
+        self.insert_with(&mut path.as_bytes().to_owned(), Some(data))
     }
 
     fn find(&self, path: &str) -> Option<&Node<T>> {
@@ -146,6 +155,10 @@ impl<T> Radix<T> for Node<T> {
 
     fn add_node(&mut self, path: &str, data: T) -> &mut Node<T> {
         self.add_node_with(&mut path.as_bytes().to_owned(), Some(data), 0)
+    }
+
+    fn find_node(&self, path: &str) -> Option<&Node<T>> {
+        self.find_node_with(&mut path.as_bytes().to_owned(), 0)
     }
 }
 
@@ -300,7 +313,7 @@ mod tests {
     fn insert_then_return_new_node() {
         let mut tree = Node::<u8>::new("", b' ');
 
-        let a = tree.add_node("a", b'a');
+        let a = tree.insert("a", b'a');
         let b = a.add_node("b", b'b');
         let c = b.add_node("c", b'c');
         let d = c.add_node("d", b'd');
@@ -315,23 +328,27 @@ mod tests {
 
         println!("{:#?}", tree);
 
-        let node = tree.find("a");
-        assert_eq!(node.is_some(), true);
-        assert_eq!(node.unwrap().data.unwrap(), b'a');
+        let a = tree.find("a");
+        assert_eq!(a.is_some(), true);
+        assert_eq!(a.unwrap().data.unwrap(), b'a');
 
-        let node = node.unwrap().find("b");
-        assert_eq!(node.is_some(), true);
-        assert_eq!(node.unwrap().data.unwrap(), b'b');
+        let b = a.unwrap().find_node("b");
+        assert_eq!(b.is_some(), true);
+        assert_eq!(b.unwrap().data.unwrap(), b'b');
 
-        let node = node.unwrap().find("c");
-        assert_eq!(node.is_some(), true);
-        assert_eq!(node.unwrap().data.unwrap(), b'c');
+        let c = b.unwrap().find_node("c");
+        assert_eq!(c.is_some(), true);
+        assert_eq!(c.unwrap().data.unwrap(), b'c');
 
-        let node = node.unwrap().find("d");
-        assert_eq!(node.is_some(), true);
-        assert_eq!(node.unwrap().data.unwrap(), b'd');
+        let d = c.unwrap().find_node("d");
+        assert_eq!(d.is_some(), true);
+        assert_eq!(d.unwrap().data.unwrap(), b'd');
 
-        let node = node.unwrap().find("e");
+        let e = d.unwrap().find_node("e");
+        assert_eq!(e.is_some(), true);
+        assert_eq!(e.unwrap().data.unwrap(), b'e');
+
+        let node = a.unwrap().find("abcde");
         assert_eq!(node.is_some(), true);
         assert_eq!(node.unwrap().data.unwrap(), b'e');
 
