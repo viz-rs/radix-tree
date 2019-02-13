@@ -1,9 +1,9 @@
 use std::mem;
 
 pub trait Radix<T> {
+    fn remove(&mut self, path: &str);
     fn insert(&mut self, path: &str, data: T);
     fn find(&self, path: &str) -> Option<&Node<T>>;
-    fn remove(&mut self, path: &str);
     fn add_node(&mut self, path: &str, data: T) -> &mut Node<T>;
 }
 
@@ -133,6 +133,9 @@ impl<T> Node<T> {
 }
 
 impl<T> Radix<T> for Node<T> {
+    #[allow(unused_variables)]
+    fn remove(&mut self, path: &str) {}
+
     fn insert(&mut self, path: &str, data: T) {
         self.insert_with(&mut path.as_bytes().to_owned(), Some(data));
     }
@@ -144,9 +147,6 @@ impl<T> Radix<T> for Node<T> {
     fn add_node(&mut self, path: &str, data: T) -> &mut Node<T> {
         self.add_node_with(&mut path.as_bytes().to_owned(), Some(data), 0)
     }
-
-    #[allow(unused_variables)]
-    fn remove(&mut self, path: &str) {}
 }
 
 #[cfg(test)]
