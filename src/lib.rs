@@ -2,10 +2,10 @@ use std::mem;
 
 pub trait Radix<T> {
     fn remove(&mut self, path: &str);
-    fn insert(&mut self, path: &str, data: T) -> &mut Node<T>;
-    fn find(&self, path: &str) -> Option<&Node<T>>;
-    fn add_node(&mut self, path: &str, data: T) -> &mut Node<T>;
-    fn find_node(&self, path: &str) -> Option<&Node<T>>;
+    fn insert(&mut self, path: &str, data: T) -> &mut Self;
+    fn find(&mut self, path: &str) -> Option<&mut Self>;
+    fn add_node(&mut self, path: &str, data: T) -> &mut Self;
+    fn find_node(&mut self, path: &str) -> Option<&mut Self>;
 }
 
 #[derive(Debug)]
@@ -26,55 +26,50 @@ impl<T> Node<T> {
         }
     }
 
-    // Insert with `&mut Vec<u8>` path and `Option<T>` data
-    pub fn insert_with(&mut self, path: &mut Vec<u8>, data: Option<T>) -> &mut Node<T> {
-        // empty node
+    pub fn insert_with(&mut self, path: &mut Vec<u8>, data: Option<T>) -> &mut Self {
+        let pl = path.len();
         let sl = self.path.len();
-        if (sl | self.indices.len()) == 0 {
+
+        // empty input path
+        if pl == 0 {
+            self.data = data;
+            return self;
+        }
+
+        // empty node
+        if sl == 0 && self.indices.len() == 0 {
             self.data = data;
             self.path = path.to_owned();
             return self;
         }
 
-        let pl = path.len();
+        // pl > 0 && sl >= 0
         let max = pl.min(sl);
         let mut i = 0;
         while i < max && path[i] == self.path[i] {
             i += 1;
         }
 
-        // "abc" < "abcde"
-        // Split Node
         if i < sl {
-            let mut child = Node {
-                nodes: Vec::new(),
-                indices: Vec::new(),
+            let child = Node {
                 data: self.data.take(),
                 path: self.path.split_off(i),
+                nodes: mem::replace(&mut self.nodes, Vec::new()),
+                indices: mem::replace(&mut self.indices, Vec::new()),
             };
-
-            mem::swap(&mut self.nodes, &mut child.nodes);
-            mem::swap(&mut self.indices, &mut child.indices);
-
-            // `self.data` and `self.path` have been taken away
-            // so dont need set `self.data = None;`
             self.indices.push(child.path[0]);
             self.nodes.push(child);
         }
 
-        // "abc" == "abc"
         if i == pl {
             self.data = data;
             return self;
         }
 
-        // "abcde" > "abc"
-        // New Node
         self.add_node_with(path, data, i)
     }
 
-    // Find with `&mut Vec<u8>` path
-    pub fn find_with(&self, path: &mut Vec<u8>) -> Option<&Node<T>> {
+    pub fn find_with(&mut self, path: &mut Vec<u8>) -> Option<&mut Self> {
         let pl = path.len();
         let sl = self.path.len();
 
@@ -103,7 +98,7 @@ impl<T> Node<T> {
         self.find_node_with(path, i)
     }
 
-    pub fn add_node_with(&mut self, path: &mut Vec<u8>, data: Option<T>, i: usize) -> &mut Node<T> {
+    pub fn add_node_with(&mut self, path: &mut Vec<u8>, data: Option<T>, i: usize) -> &mut Self {
         let l = self.indices.len();
         let c = path[i];
         let mut j = 0;
@@ -125,7 +120,7 @@ impl<T> Node<T> {
         &mut self.nodes[l]
     }
 
-    pub fn find_node_with(&self, path: &mut Vec<u8>, i: usize) -> Option<&Node<T>> {
+    pub fn find_node_with(&mut self, path: &mut Vec<u8>, i: usize) -> Option<&mut Self> {
         let l = self.indices.len();
         let c = path[i];
         let mut j = 0;
@@ -135,7 +130,6 @@ impl<T> Node<T> {
             }
             j += 1;
         }
-
         // not found
         None
     }
@@ -144,20 +138,18 @@ impl<T> Node<T> {
 impl<T> Radix<T> for Node<T> {
     #[allow(unused_variables)]
     fn remove(&mut self, path: &str) {}
-
-    fn insert(&mut self, path: &str, data: T) -> &mut Node<T> {
+    fn insert(&mut self, path: &str, data: T) -> &mut Self {
         self.insert_with(&mut path.as_bytes().to_owned(), Some(data))
     }
-
-    fn find(&self, path: &str) -> Option<&Node<T>> {
+    fn find(&mut self, path: &str) -> Option<&mut Self> {
         self.find_with(&mut path.as_bytes().to_owned())
     }
-
-    fn add_node(&mut self, path: &str, data: T) -> &mut Node<T> {
+    // Add node to parent
+    fn add_node(&mut self, path: &str, data: T) -> &mut Self {
         self.add_node_with(&mut path.as_bytes().to_owned(), Some(data), 0)
     }
-
-    fn find_node(&self, path: &str) -> Option<&Node<T>> {
+    // Find node from parent
+    fn find_node(&mut self, path: &str) -> Option<&mut Self> {
         self.find_node_with(&mut path.as_bytes().to_owned(), 0)
     }
 }
@@ -318,6 +310,7 @@ mod tests {
         let c = b.add_node("c", b'c');
         let d = c.add_node("d", b'd');
         let e = d.add_node("e", b'e');
+
         e.print_nodes(0);
         d.print_nodes(0);
         c.print_nodes(0);
@@ -328,27 +321,32 @@ mod tests {
 
         println!("{:#?}", tree);
 
-        let a = tree.find("a");
-        assert_eq!(a.is_some(), true);
-        assert_eq!(a.unwrap().data.unwrap(), b'a');
+        let node = tree.find("a");
+        assert_eq!(node.is_some(), true);
+        let a = node.unwrap();
+        assert_eq!(a.data.unwrap(), b'a');
 
-        let b = a.unwrap().find_node("b");
-        assert_eq!(b.is_some(), true);
-        assert_eq!(b.unwrap().data.unwrap(), b'b');
+        let node = a.find_node("b");
+        assert_eq!(node.is_some(), true);
+        let b = node.unwrap();
+        assert_eq!(b.data.unwrap(), b'b');
 
-        let c = b.unwrap().find_node("c");
-        assert_eq!(c.is_some(), true);
-        assert_eq!(c.unwrap().data.unwrap(), b'c');
+        let node = b.find_node("c");
+        assert_eq!(node.is_some(), true);
+        let c = node.unwrap();
+        assert_eq!(c.data.unwrap(), b'c');
 
-        let d = c.unwrap().find_node("d");
-        assert_eq!(d.is_some(), true);
-        assert_eq!(d.unwrap().data.unwrap(), b'd');
+        let node = c.find_node("d");
+        assert_eq!(node.is_some(), true);
+        let d = node.unwrap();
+        assert_eq!(d.data.unwrap(), b'd');
 
-        let e = d.unwrap().find_node("e");
-        assert_eq!(e.is_some(), true);
-        assert_eq!(e.unwrap().data.unwrap(), b'e');
+        let node = d.find_node("e");
+        assert_eq!(node.is_some(), true);
+        let e = node.unwrap();
+        assert_eq!(e.data.unwrap(), b'e');
 
-        let node = a.unwrap().find("abcde");
+        let node = a.find("abcde");
         assert_eq!(node.is_some(), true);
         assert_eq!(node.unwrap().data.unwrap(), b'e');
 
