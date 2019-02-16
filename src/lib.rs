@@ -3,12 +3,12 @@ use std::mem;
 pub trait Radix<T> {
     fn remove(&mut self, path: &str);
     fn insert(&mut self, path: &str, data: T) -> &mut Self;
-    fn find(&mut self, path: &str) -> Option<&mut Self>;
+    fn find(&self, path: &str) -> Option<&Self>;
     fn add_node(&mut self, path: &str, data: T) -> &mut Self;
-    fn find_node(&mut self, path: &str) -> Option<&mut Self>;
+    fn find_node(&self, path: &str) -> Option<&Self>;
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Node<T> {
     pub path: Vec<u8>,
     pub data: Option<T>,
@@ -26,19 +26,28 @@ impl<T> Node<T> {
         }
     }
 
-    pub fn insert_with(&mut self, path: &mut Vec<u8>, data: Option<T>) -> &mut Self {
+    pub fn insert_with(
+        &mut self,
+        path: &mut Vec<u8>,
+        data: Option<T>,
+        force_update: bool,
+    ) -> &mut Self {
         let pl = path.len();
         let sl = self.path.len();
 
         // empty input path
         if pl == 0 {
-            self.data = data;
+            if force_update {
+                self.data = data;
+            }
             return self;
         }
 
         // empty node
         if sl == 0 && self.indices.len() == 0 {
-            self.data = data;
+            if force_update {
+                self.data = data;
+            }
             self.path = path.to_owned();
             return self;
         }
@@ -62,14 +71,16 @@ impl<T> Node<T> {
         }
 
         if i == pl {
-            self.data = data;
+            if force_update {
+                self.data = data;
+            }
             return self;
         }
 
-        self.add_node_with(path, data, i)
+        self.add_node_with(path, data, i, force_update)
     }
 
-    pub fn find_with(&mut self, path: &mut Vec<u8>) -> Option<&mut Self> {
+    pub fn find_with(&self, path: &mut Vec<u8>) -> Option<&Self> {
         let pl = path.len();
         let sl = self.path.len();
 
@@ -98,13 +109,19 @@ impl<T> Node<T> {
         self.find_node_with(path, i)
     }
 
-    pub fn add_node_with(&mut self, path: &mut Vec<u8>, data: Option<T>, i: usize) -> &mut Self {
+    pub fn add_node_with(
+        &mut self,
+        path: &mut Vec<u8>,
+        data: Option<T>,
+        i: usize,
+        force_update: bool,
+    ) -> &mut Self {
         let l = self.indices.len();
         let c = path[i];
         let mut j = 0;
         while j < l {
             if c == self.indices[j] {
-                return self.nodes[j].insert_with(&mut path.split_off(i), data);
+                return self.nodes[j].insert_with(&mut path.split_off(i), data, force_update);
             }
             j += 1;
         }
@@ -120,7 +137,7 @@ impl<T> Node<T> {
         &mut self.nodes[l]
     }
 
-    pub fn find_node_with(&mut self, path: &mut Vec<u8>, i: usize) -> Option<&mut Self> {
+    pub fn find_node_with(&self, path: &mut Vec<u8>, i: usize) -> Option<&Self> {
         let l = self.indices.len();
         let c = path[i];
         let mut j = 0;
@@ -139,17 +156,17 @@ impl<T> Radix<T> for Node<T> {
     #[allow(unused_variables)]
     fn remove(&mut self, path: &str) {}
     fn insert(&mut self, path: &str, data: T) -> &mut Self {
-        self.insert_with(&mut path.as_bytes().to_owned(), Some(data))
+        self.insert_with(&mut path.as_bytes().to_owned(), Some(data), true)
     }
-    fn find(&mut self, path: &str) -> Option<&mut Self> {
+    fn find(&self, path: &str) -> Option<&Self> {
         self.find_with(&mut path.as_bytes().to_owned())
     }
     // Add node to parent
     fn add_node(&mut self, path: &str, data: T) -> &mut Self {
-        self.add_node_with(&mut path.as_bytes().to_owned(), Some(data), 0)
+        self.add_node_with(&mut path.as_bytes().to_owned(), Some(data), 0, true)
     }
     // Find node from parent
-    fn find_node(&mut self, path: &str) -> Option<&mut Self> {
+    fn find_node(&self, path: &str) -> Option<&Self> {
         self.find_node_with(&mut path.as_bytes().to_owned(), 0)
     }
 }
