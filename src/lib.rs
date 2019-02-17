@@ -33,7 +33,7 @@ pub struct Node<K, V> {
 
 impl<K, V> Node<K, V>
 where
-    K: Clone + Copy + PartialEq,
+    K: Copy + PartialEq,
 {
     pub fn new<P>(path: P, data: V) -> Self
     where
@@ -175,7 +175,7 @@ where
 
 impl<K, V> Radix<K, V> for Node<K, V>
 where
-    K: Clone + Copy + PartialEq,
+    K: Copy + PartialEq,
 {
     #[allow(unused_variables)]
     fn remove<P>(&mut self, path: P)
@@ -249,7 +249,7 @@ mod tests {
 
     impl<T> Vectorable<T> for &[T]
     where
-        T: std::clone::Clone,
+        T: Clone,
     {
         fn into(self) -> Vec<T> {
             self.to_owned()
