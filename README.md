@@ -9,6 +9,8 @@ A [radix tree] implementation for router, path search.
 
 ## Features
 
+- Supports many types. Like `char`, `u8` etc.
+
 ## Usage
 
 ```rust
