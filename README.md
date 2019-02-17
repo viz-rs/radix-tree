@@ -14,13 +14,9 @@ A [radix tree] implementation for router, path search.
 ## Usage
 
 ```rust
-use radix_tree::{Node, Vectorable};
+use radix_tree::{impl_vec, Node, Vectorable};
 
-impl Vectorable<char> for &str {
-    fn into(self) -> Vec<char> {
-        self.chars().collect()
-    }
-}
+impl_vec!(&'static str, char, |x: &'static str| x.chars().collect());
 
 let mut tree = Node::<char, bool>::new("", false);
 
@@ -75,44 +71,12 @@ assert_eq!(node.is_none(), true);
 ## Examples
 
 ```rust
-impl Vectorable<char> for &str {
-    fn into(self) -> Vec<char> {
-        self.chars().collect()
-    }
-}
-
-impl Vectorable<char> for String {
-    fn into(self) -> Vec<char> {
-        self.chars().collect()
-    }
-}
-
-impl Vectorable<u8> for &str {
-    fn into(self) -> Vec<u8> {
-        self.as_bytes().to_owned()
-    }
-}
-
-impl Vectorable<u8> for String {
-    fn into(self) -> Vec<u8> {
-        self.as_bytes().to_owned()
-    }
-}
-
-impl<T> Vectorable<T> for Vec<T> {
-    fn into(self) -> Vec<T> {
-        self
-    }
-}
-
-impl<T> Vectorable<T> for &[T]
-where
-    T: std::clone::Clone,
-{
-    fn into(self) -> Vec<T> {
-        self.to_owned()
-    }
-}
+impl_vec!(&'static str, u8, |x: &'static str| x.as_bytes().to_owned());
+impl_vec!(&'static str, char, |x: &'static str| x.chars().collect());
+impl_vec!(String, u8, |x: &String| x.as_bytes().to_owned());
+impl_vec!(String, char, |x: &String| x.chars().collect());
+impl_vec_k!(Vec<K>, |x: &Vec<K>| x.to_owned());
+impl_vec_k!(&[K], |x: &[K]| x.to_owned());
 
 let node = Node::<u8, &str>::new("Hello world!", "a");
 assert_eq!(

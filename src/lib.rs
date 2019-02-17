@@ -1,26 +1,43 @@
-use std::borrow::ToOwned;
 use std::mem;
 
 pub trait Vectorable<K> {
-    fn into(self) -> Vec<K>;
+    fn into(&self) -> Vec<K>;
 }
 
-pub trait Radix<K, V> {
-    fn remove<P>(&mut self, path: P)
-    where
-        P: Vectorable<K>;
-    fn insert<P>(&mut self, path: P, data: V) -> &mut Self
-    where
-        P: Vectorable<K>;
-    fn find<P>(&self, path: P) -> Option<&Self>
-    where
-        P: Vectorable<K>;
-    fn add_node<P>(&mut self, path: P, data: V) -> &mut Self
-    where
-        P: Vectorable<K>;
-    fn find_node<P>(&self, path: P) -> Option<&Self>
-    where
-        P: Vectorable<K>;
+#[doc(hidden)]
+#[macro_export]
+#[allow(unused_macros)]
+macro_rules! impl_vec {
+    ($from: ty, $to: ty, $transform: expr) => {
+        impl Vectorable<$to> for $from {
+            #[inline]
+            fn into(&self) -> Vec<$to> {
+                $transform(self)
+            }
+        }
+    };
+}
+
+#[doc(hidden)]
+#[macro_export]
+#[allow(unused_macros)]
+macro_rules! impl_vec_k {
+    ($from: ty, $transform: expr) => {
+        impl<K: Copy> Vectorable<K> for $from {
+            #[inline]
+            fn into(&self) -> Vec<K> {
+                $transform(self)
+            }
+        }
+    };
+}
+
+pub trait Radix<K, V, P: Vectorable<K>> {
+    fn remove(&mut self, path: P);
+    fn insert(&mut self, path: P, data: V) -> &mut Self;
+    fn find(&self, path: P) -> Option<&Self>;
+    fn add_node(&mut self, path: P, data: V) -> &mut Self;
+    fn find_node(&self, path: P) -> Option<&Self>;
 }
 
 #[derive(Debug, PartialEq)]
@@ -31,17 +48,11 @@ pub struct Node<K, V> {
     pub nodes: Vec<Node<K, V>>,
 }
 
-impl<K, V> Node<K, V>
-where
-    K: Copy + PartialEq,
-{
-    pub fn new<P>(path: P, data: V) -> Self
-    where
-        P: Vectorable<K>,
-    {
+impl<K: Copy + PartialEq, V> Node<K, V> {
+    pub fn new<P: Vectorable<K>>(path: P, data: V) -> Self {
         Node {
             data: Some(data),
-            path: path.into(),
+            path: (&path).into(),
             nodes: Vec::new(),
             indices: Vec::new(),
         }
@@ -173,43 +184,24 @@ where
     }
 }
 
-impl<K, V> Radix<K, V> for Node<K, V>
-where
-    K: Copy + PartialEq,
-{
+impl<K: Copy + PartialEq, V, P: Vectorable<K>> Radix<K, V, P> for Node<K, V> {
     #[allow(unused_variables)]
-    fn remove<P>(&mut self, path: P)
-    where
-        P: Vectorable<K>,
-    {
+    fn remove(&mut self, path: P) {}
+
+    fn insert(&mut self, path: P, data: V) -> &mut Self {
+        self.insert_with(&mut (&path).into(), Some(data), true)
     }
 
-    fn insert<P>(&mut self, path: P, data: V) -> &mut Self
-    where
-        P: Vectorable<K>,
-    {
-        self.insert_with(&mut path.into(), Some(data), true)
+    fn find(&self, path: P) -> Option<&Self> {
+        self.find_with(&mut (&path).into())
     }
 
-    fn find<P>(&self, path: P) -> Option<&Self>
-    where
-        P: Vectorable<K>,
-    {
-        self.find_with(&mut path.into())
+    fn add_node(&mut self, path: P, data: V) -> &mut Self {
+        self.add_node_with(&mut (&path).into(), Some(data), 0, true)
     }
 
-    fn add_node<P>(&mut self, path: P, data: V) -> &mut Self
-    where
-        P: Vectorable<K>,
-    {
-        self.add_node_with(&mut path.into(), Some(data), 0, true)
-    }
-
-    fn find_node<P>(&self, path: P) -> Option<&Self>
-    where
-        P: Vectorable<K>,
-    {
-        self.find_node_with(&mut path.into(), 0)
+    fn find_node(&self, path: P) -> Option<&Self> {
+        self.find_node_with(&mut (&path).into(), 0)
     }
 }
 
@@ -217,44 +209,12 @@ where
 mod tests {
     use super::*;
 
-    impl Vectorable<char> for &str {
-        fn into(self) -> Vec<char> {
-            self.chars().collect()
-        }
-    }
-
-    impl Vectorable<char> for String {
-        fn into(self) -> Vec<char> {
-            self.chars().collect()
-        }
-    }
-
-    impl Vectorable<u8> for &str {
-        fn into(self) -> Vec<u8> {
-            self.as_bytes().to_owned()
-        }
-    }
-
-    impl Vectorable<u8> for String {
-        fn into(self) -> Vec<u8> {
-            self.as_bytes().to_owned()
-        }
-    }
-
-    impl<T> Vectorable<T> for Vec<T> {
-        fn into(self) -> Vec<T> {
-            self
-        }
-    }
-
-    impl<T> Vectorable<T> for &[T]
-    where
-        T: Clone,
-    {
-        fn into(self) -> Vec<T> {
-            self.to_owned()
-        }
-    }
+    impl_vec!(&'static str, u8, |x: &'static str| x.as_bytes().to_owned());
+    impl_vec!(&'static str, char, |x: &'static str| x.chars().collect());
+    impl_vec!(String, u8, |x: &String| x.as_bytes().to_owned());
+    impl_vec!(String, char, |x: &String| x.chars().collect());
+    impl_vec_k!(Vec<K>, |x: &Vec<K>| x.to_owned());
+    impl_vec_k!(&[K], |x: &[K]| x.to_owned());
 
     macro_rules! find {
         ($tree:expr, $($path:expr, $data:expr),*,) => {{
