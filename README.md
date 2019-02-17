@@ -7,12 +7,20 @@ A [radix tree] implementation for router, path search.
 [![Documentation](https://docs.rs/radix-tree/badge.svg)](https://docs.rs/radix-tree)
 ![License](https://img.shields.io/crates/l/radix-tree.svg)
 
+## Features
+
 ## Usage
 
 ```rust
-use radix_tree::Node;
+use radix_tree::{Node, Vectorable};
 
-let mut tree = Node::<bool>::new("", false);
+impl Vectorable<char> for &str {
+    fn into(self) -> Vec<char> {
+        self.chars().collect()
+    }
+}
+
+let mut tree = Node::<char, bool>::new("", false);
 
 tree.insert("alligator", true);
 tree.insert("alien", true);
@@ -28,6 +36,9 @@ tree.insert("rubicundus", true);
 tree.insert("all", true);
 tree.insert("rub", true);
 tree.insert("ba", true);
+tree.insert("你好，世界", true);
+tree.insert("你好", true);
+tree.insert("你", true);
 
 let node = tree.find("all");
 assert_eq!(node.is_some(), true);
@@ -57,6 +68,86 @@ assert_eq!(node.is_none(), true);
                      `ub-(i) [c] --> [ou] []=false
                                              `on-() [] --> [] []=true
                                              `undus-() [] --> [] []=true
+```
+
+## Examples
+
+```rust
+impl Vectorable<char> for &str {
+    fn into(self) -> Vec<char> {
+        self.chars().collect()
+    }
+}
+
+impl Vectorable<char> for String {
+    fn into(self) -> Vec<char> {
+        self.chars().collect()
+    }
+}
+
+impl Vectorable<u8> for &str {
+    fn into(self) -> Vec<u8> {
+        self.as_bytes().to_owned()
+    }
+}
+
+impl Vectorable<u8> for String {
+    fn into(self) -> Vec<u8> {
+        self.as_bytes().to_owned()
+    }
+}
+
+impl<T> Vectorable<T> for Vec<T> {
+    fn into(self) -> Vec<T> {
+        self
+    }
+}
+
+impl<T> Vectorable<T> for &[T]
+where
+    T: std::clone::Clone,
+{
+    fn into(self) -> Vec<T> {
+        self.to_owned()
+    }
+}
+
+let node = Node::<u8, &str>::new("Hello world!", "a");
+assert_eq!(
+    node.path,
+    vec![72, 101, 108, 108, 111, 32, 119, 111, 114, 108, 100, 33]
+);
+assert_eq!(node.data.unwrap(), "a");
+
+let node = Node::<u8, &str>::new("Hello 世界！", "a");
+assert_eq!(
+    node.path,
+    vec![72, 101, 108, 108, 111, 32, 228, 184, 150, 231, 149, 140, 239, 188, 129]
+);
+assert_eq!(node.data.unwrap(), "a");
+
+let node = Node::<char, &str>::new("Hello 世界！", "a");
+assert_eq!(
+    node.path,
+    vec!['H', 'e', 'l', 'l', 'o', ' ', '世', '界', '！']
+);
+assert_eq!(node.data.unwrap(), "a");
+
+let node = Node::<char, u32>::new("你好，世界！", 0);
+assert_eq!(node.path, vec!['你', '好', '，', '世', '界', '！']);
+assert_eq!(node.data.unwrap(), 0);
+
+let node = Node::<u8, u8>::new("abcde", 1);
+assert_eq!(node.path, vec![97, 98, 99, 100, 101]);
+assert_eq!(node.data.unwrap(), 1);
+
+let node = Node::new("abcde".as_bytes().to_vec(), 97);
+assert_eq!(node.path, vec![97, 98, 99, 100, 101]);
+assert_eq!(node.data.unwrap(), 97);
+
+let node = Node::new("abcde".as_bytes(), 97);
+assert_eq!(node.path, vec![97, 98, 99, 100, 101]);
+assert_eq!(node.data.unwrap(), 97);
 ```
 
 ## Acknowledgements
