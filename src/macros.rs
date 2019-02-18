@@ -29,8 +29,19 @@ macro_rules! impl_vec_k {
 }
 
 impl_vec!(&'static str, u8, |x: &'static str| x.as_bytes().to_owned());
-impl_vec!(&'static str, char, |x: &'static str| x.chars().collect());
 impl_vec!(String, u8, |x: &String| x.as_bytes().to_owned());
+
+impl_vec!(&'static str, u32, |x: &'static str| x
+    .chars()
+    .map(|x| x as u32)
+    .collect());
+impl_vec!(String, u32, |x: &String| x
+    .chars()
+    .map(|x| x as u32)
+    .collect());
+
+impl_vec!(&'static str, char, |x: &'static str| x.chars().collect());
 impl_vec!(String, char, |x: &String| x.chars().collect());
+
 impl_vec_k!(Vec<K>, |x: &Vec<K>| x.to_owned());
 impl_vec_k!(&[K], |x: &[K]| x.to_owned());
