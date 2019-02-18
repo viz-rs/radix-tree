@@ -14,9 +14,8 @@ A [radix tree] implementation for router, path search.
 ## Usage
 
 ```rust
-use radix_tree::{impl_vec, Node, Vectorable};
+use radix_tree::{Node, Vectorable};
 
-impl_vec!(&'static str, char, |x: &'static str| x.chars().collect());
 
 let mut tree = Node::<char, bool>::new("", false);
 
@@ -71,13 +70,6 @@ assert_eq!(node.is_none(), true);
 ## Examples
 
 ```rust
-impl_vec!(&'static str, u8, |x: &'static str| x.as_bytes().to_owned());
-impl_vec!(&'static str, char, |x: &'static str| x.chars().collect());
-impl_vec!(String, u8, |x: &String| x.as_bytes().to_owned());
-impl_vec!(String, char, |x: &String| x.chars().collect());
-impl_vec_k!(Vec<K>, |x: &Vec<K>| x.to_owned());
-impl_vec_k!(&[K], |x: &[K]| x.to_owned());
-
 let node = Node::<u8, &str>::new("Hello world!", "a");
 assert_eq!(
     node.path,
