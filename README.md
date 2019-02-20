@@ -9,13 +9,12 @@ A [radix tree] implementation for router, path search.
 
 ## Features
 
-- Supports many types. Like `char`, `u8` etc.
+- Supports many types. Like `char`, `u8` `u32` etc.
 
 ## Usage
 
 ```rust
 use radix_tree::{Node, Vectorable};
-
 
 let mut tree = Node::<char, bool>::new("", false);
 

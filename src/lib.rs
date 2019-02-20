@@ -1,5 +1,9 @@
 use std::mem;
 
+const fn pos<K>(l: &usize, _: &K, _: &Vec<K>) -> usize {
+    *l
+}
+
 pub trait Vectorable<K> {
     fn into(&self) -> Vec<K>;
 }
@@ -23,7 +27,7 @@ pub struct Node<K, V> {
     pub nodes: Vec<Node<K, V>>,
 }
 
-impl<K: Copy + PartialEq, V> Node<K, V> {
+impl<K: Copy + PartialEq + PartialOrd, V> Node<K, V> {
     pub fn new<P: Vectorable<K>>(path: P, data: V) -> Self {
         Node {
             data: Some(data),
@@ -84,16 +88,20 @@ impl<K: Copy + PartialEq, V> Node<K, V> {
             return self;
         }
 
-        self.add_node_with(path, data, i, force_update)
+        self.add_node_with(path, data, i, force_update, pos)
     }
 
-    pub fn add_node_with(
+    pub fn add_node_with<F>(
         &mut self,
         path: &mut Vec<K>,
         data: Option<V>,
         i: usize,
         force_update: bool,
-    ) -> &mut Self {
+        pos: F,
+    ) -> &mut Self
+    where
+        F: FnOnce(&usize, &K, &Vec<K>) -> usize,
+    {
         let l = self.indices.len();
         let c = path[i];
         let mut j = 0;
@@ -104,15 +112,28 @@ impl<K: Copy + PartialEq, V> Node<K, V> {
             j += 1;
         }
 
-        self.indices.push(c);
-        self.nodes.push(Node {
-            data,
-            nodes: Vec::new(),
-            indices: Vec::new(),
-            path: path.split_off(i),
-        });
+        let index = pos(&l, &c, &self.indices);
+        self.indices.insert(index, c);
+        self.nodes.insert(
+            index,
+            Node {
+                data,
+                nodes: Vec::new(),
+                indices: Vec::new(),
+                path: path.split_off(i),
+            },
+        );
 
-        &mut self.nodes[l]
+        &mut self.nodes[index]
+
+        // self.indices.push(c);
+        // self.nodes.push(Node {
+        //     data,
+        //     nodes: Vec::new(),
+        //     indices: Vec::new(),
+        //     path: path.split_off(i),
+        // });
+        // &mut self.nodes[l]
     }
 
     pub fn find_with(&self, path: &mut Vec<K>) -> Option<&Self> {
@@ -159,7 +180,7 @@ impl<K: Copy + PartialEq, V> Node<K, V> {
     }
 }
 
-impl<K: Copy + PartialEq, V, P: Vectorable<K>> Radix<K, V, P> for Node<K, V> {
+impl<K: Copy + PartialEq + PartialOrd, V, P: Vectorable<K>> Radix<K, V, P> for Node<K, V> {
     #[allow(unused_variables)]
     fn remove(&mut self, path: P) {}
 
@@ -172,7 +193,7 @@ impl<K: Copy + PartialEq, V, P: Vectorable<K>> Radix<K, V, P> for Node<K, V> {
     }
 
     fn add_node(&mut self, path: P, data: V) -> &mut Self {
-        self.add_node_with(&mut (&path).into(), Some(data), 0, true)
+        self.add_node_with(&mut (&path).into(), Some(data), 0, true, pos)
     }
 
     fn find_node(&self, path: P) -> Option<&Self> {
