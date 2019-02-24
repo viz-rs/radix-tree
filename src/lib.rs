@@ -37,12 +37,16 @@ impl<K: Copy + PartialEq + PartialOrd, V> Node<K, V> {
         }
     }
 
-    pub fn insert_with(
+    pub fn insert_with<F>(
         &mut self,
         path: &mut Vec<K>,
         data: Option<V>,
         force_update: bool,
-    ) -> &mut Self {
+        pos: F,
+    ) -> &mut Self
+    where
+        F: Fn(&usize, &K, &Vec<K>) -> usize,
+    {
         let pl = path.len();
         let sl = self.path.len();
 
@@ -77,8 +81,13 @@ impl<K: Copy + PartialEq + PartialOrd, V> Node<K, V> {
                 nodes: mem::replace(&mut self.nodes, Vec::new()),
                 indices: mem::replace(&mut self.indices, Vec::new()),
             };
-            self.indices.push(child.path[0]);
-            self.nodes.push(child);
+            let c = child.path[0];
+            let index = pos(&self.indices.len(), &c, &self.indices);
+            self.indices.insert(index, c);
+            self.nodes.insert(index, child);
+
+            // self.indices.push(child.path[0]);
+            // self.nodes.push(child);
         }
 
         if i == pl {
@@ -100,14 +109,14 @@ impl<K: Copy + PartialEq + PartialOrd, V> Node<K, V> {
         pos: F,
     ) -> &mut Self
     where
-        F: FnOnce(&usize, &K, &Vec<K>) -> usize,
+        F: Fn(&usize, &K, &Vec<K>) -> usize,
     {
         let l = self.indices.len();
         let c = path[i];
         let mut j = 0;
         while j < l {
             if c == self.indices[j] {
-                return self.nodes[j].insert_with(&mut path.split_off(i), data, force_update);
+                return self.nodes[j].insert_with(&mut path.split_off(i), data, force_update, pos);
             }
             j += 1;
         }
@@ -185,7 +194,7 @@ impl<K: Copy + PartialEq + PartialOrd, V, P: Vectorable<K>> Radix<K, V, P> for N
     fn remove(&mut self, path: P) {}
 
     fn insert(&mut self, path: P, data: V) -> &mut Self {
-        self.insert_with(&mut (&path).into(), Some(data), true)
+        self.insert_with(&mut (&path).into(), Some(data), true, pos)
     }
 
     fn find(&self, path: P) -> Option<&Self> {
