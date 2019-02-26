@@ -19,7 +19,10 @@ macro_rules! impl_vec {
 #[allow(unused_macros)]
 macro_rules! impl_vec_k {
     ($from: ty, $transform: expr) => {
-        impl<K: Copy> Vectorable<K> for $from {
+        impl<K> Vectorable<K> for $from
+        where
+            K: Copy + PartialEq + PartialOrd,
+        {
             #[inline]
             fn into(&self) -> Vec<K> {
                 $transform(self)

@@ -4,14 +4,21 @@ const fn pos<K>(l: &usize, _: &K, _: &Vec<K>) -> usize {
     *l
 }
 
-pub trait Vectorable<K> {
+pub trait Vectorable<K>
+where
+    K: Copy + PartialEq + PartialOrd,
+{
     fn into(&self) -> Vec<K>;
 }
 
 #[macro_use]
 pub mod macros;
 
-pub trait Radix<K, V, P: Vectorable<K>> {
+pub trait Radix<K, V, P: Vectorable<K>>
+where
+    K: Copy + PartialEq + PartialOrd,
+    V: Clone,
+{
     fn remove(&mut self, path: P);
     fn insert(&mut self, path: P, data: V) -> &mut Self;
     fn find(&self, path: P) -> Option<&Self>;
@@ -19,7 +26,7 @@ pub trait Radix<K, V, P: Vectorable<K>> {
     fn find_node(&self, path: P) -> Option<&Self>;
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Node<K, V> {
     pub path: Vec<K>,
     pub data: Option<V>,
@@ -27,7 +34,11 @@ pub struct Node<K, V> {
     pub nodes: Vec<Node<K, V>>,
 }
 
-impl<K: Copy + PartialEq + PartialOrd, V> Node<K, V> {
+impl<K, V> Node<K, V>
+where
+    K: Copy + PartialEq + PartialOrd,
+    V: Clone,
+{
     pub fn new<P: Vectorable<K>>(path: P, data: V) -> Self {
         Node {
             data: Some(data),
@@ -189,7 +200,11 @@ impl<K: Copy + PartialEq + PartialOrd, V> Node<K, V> {
     }
 }
 
-impl<K: Copy + PartialEq + PartialOrd, V, P: Vectorable<K>> Radix<K, V, P> for Node<K, V> {
+impl<K, V, P: Vectorable<K>> Radix<K, V, P> for Node<K, V>
+where
+    K: Copy + PartialEq + PartialOrd,
+    V: Clone,
+{
     #[allow(unused_variables)]
     fn remove(&mut self, path: P) {}
 
@@ -414,5 +429,48 @@ mod tests {
         assert_eq!(node.is_some(), false);
 
         println!("{:#?}", tree);
+    }
+
+    #[test]
+    fn clone_node() {
+        let mut node = Node::<char, bool>::new("", false);
+        let mut node2 = node.clone();
+        assert_eq!(node, node2);
+
+        node.add_node("/", true);
+        node2.add_node("/", true);
+        assert_eq!(node, node2);
+
+        #[derive(Debug, Clone, PartialEq)]
+        struct NodeMetadata {
+            is_key: bool,
+            params: Option<Vec<&'static str>>,
+        }
+
+        let mut node = Node::<char, NodeMetadata>::new(
+            "/",
+            NodeMetadata {
+                is_key: false,
+                params: Some(vec![]),
+            },
+        );
+        let mut node2 = node.clone();
+        assert_eq!(node, node2);
+
+        node.add_node(
+            "users",
+            NodeMetadata {
+                is_key: true,
+                params: Some(vec!["tree"]),
+            },
+        );
+        node2.add_node(
+            "users",
+            NodeMetadata {
+                is_key: true,
+                params: Some(vec!["tree"]),
+            },
+        );
+        assert_eq!(node, node2);
     }
 }
