@@ -62,7 +62,7 @@ where
         let sl = self.path.len();
 
         // empty input path
-        if pl == 0 {
+        if 0 == pl {
             if force_update {
                 self.data = data;
             }
@@ -70,7 +70,7 @@ where
         }
 
         // empty node
-        if sl == 0 && self.indices.len() == 0 {
+        if 0 == sl && 0 == self.indices.len() {
             if force_update {
                 self.data = data;
             }
