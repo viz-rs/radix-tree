@@ -125,7 +125,6 @@ This project is licensed under either of
 - MIT license ([LICENSE-MIT](LICENSE-MIT) or
   http://opensource.org/licenses/MIT)
 
-at your option.
 
 [radix tree]: https://en.wikipedia.org/wiki/Radix_tree
 [rax]: https://github.com/antirez/rax
