@@ -16,7 +16,7 @@ A [radix tree] implementation for router, path search.
 ```rust
 use radix_tree::{Node, Vectorable};
 
-let mut tree = Node::<char, bool>::new("", false);
+let mut tree = Node::<char, bool>::new("", Some(false));
 
 tree.insert("alligator", true);
 tree.insert("alien", true);
@@ -69,40 +69,40 @@ assert_eq!(node.is_none(), true);
 ## Examples
 
 ```rust
-let node = Node::<u8, &str>::new("Hello world!", "a");
+let node = Node::<u8, &str>::new("Hello world!", Some("a"));
 assert_eq!(
     node.path,
     vec![72, 101, 108, 108, 111, 32, 119, 111, 114, 108, 100, 33]
 );
 assert_eq!(node.data.unwrap(), "a");
 
-let node = Node::<u8, &str>::new("Hello 世界！", "a");
+let node = Node::<u8, &str>::new("Hello 世界！", Some("a"));
 assert_eq!(
     node.path,
     vec![72, 101, 108, 108, 111, 32, 228, 184, 150, 231, 149, 140, 239, 188, 129]
 );
 assert_eq!(node.data.unwrap(), "a");
 
-let node = Node::<char, &str>::new("Hello 世界！", "a");
+let node = Node::<char, &str>::new("Hello 世界！", Some("a"));
 assert_eq!(
     node.path,
     vec!['H', 'e', 'l', 'l', 'o', ' ', '世', '界', '！']
 );
 assert_eq!(node.data.unwrap(), "a");
 
-let node = Node::<char, u32>::new("你好，世界！", 0);
+let node = Node::<char, u32>::new("你好，世界！", Some(0));
 assert_eq!(node.path, vec!['你', '好', '，', '世', '界', '！']);
 assert_eq!(node.data.unwrap(), 0);
 
-let node = Node::<u8, u8>::new("abcde", 1);
+let node = Node::<u8, u8>::new("abcde", Some(1));
 assert_eq!(node.path, vec![97, 98, 99, 100, 101]);
 assert_eq!(node.data.unwrap(), 1);
 
-let node = Node::new("abcde".as_bytes().to_vec(), 97);
+let node = Node::new("abcde".as_bytes().to_vec(), Some(97));
 assert_eq!(node.path, vec![97, 98, 99, 100, 101]);
 assert_eq!(node.data.unwrap(), 97);
 
-let node = Node::new("abcde".as_bytes(), 97);
+let node = Node::new("abcde".as_bytes(), Some(97));
 assert_eq!(node.path, vec![97, 98, 99, 100, 101]);
 assert_eq!(node.data.unwrap(), 97);
 ```
@@ -124,7 +124,6 @@ This project is licensed under either of
   http://www.apache.org/licenses/LICENSE-2.0)
 - MIT license ([LICENSE-MIT](LICENSE-MIT) or
   http://opensource.org/licenses/MIT)
-
 
 [radix tree]: https://en.wikipedia.org/wiki/Radix_tree
 [rax]: https://github.com/antirez/rax

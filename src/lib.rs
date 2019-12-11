@@ -39,9 +39,9 @@ where
     K: Copy + PartialEq + PartialOrd,
     V: Clone,
 {
-    pub fn new<P: Vectorable<K>>(path: P, data: V) -> Self {
+    pub fn new<P: Vectorable<K>>(path: P, data: Option<V>) -> Self {
         Node {
-            data: Some(data),
+            data,
             path: (&path).into(),
             nodes: Vec::new(),
             indices: Vec::new(),
@@ -252,47 +252,47 @@ mod tests {
 
     #[test]
     fn new_any_type_node() {
-        let node = Node::<u8, &str>::new("Hello world!", "a");
+        let node = Node::<u8, &str>::new("Hello world!", Some("a"));
         assert_eq!(
             node.path,
             vec![72, 101, 108, 108, 111, 32, 119, 111, 114, 108, 100, 33]
         );
         assert_eq!(node.data.unwrap(), "a");
 
-        let node = Node::<u8, &str>::new("Hello 世界！", "a");
+        let node = Node::<u8, &str>::new("Hello 世界！", Some("a"));
         assert_eq!(
             node.path,
             vec![72, 101, 108, 108, 111, 32, 228, 184, 150, 231, 149, 140, 239, 188, 129]
         );
         assert_eq!(node.data.unwrap(), "a");
 
-        let node = Node::<char, &str>::new("Hello 世界！", "a");
+        let node = Node::<char, &str>::new("Hello 世界！", Some("a"));
         assert_eq!(
             node.path,
             vec!['H', 'e', 'l', 'l', 'o', ' ', '世', '界', '！']
         );
         assert_eq!(node.data.unwrap(), "a");
 
-        let node = Node::<char, u32>::new("你好，世界！", 0);
+        let node = Node::<char, u32>::new("你好，世界！", Some(0));
         assert_eq!(node.path, vec!['你', '好', '，', '世', '界', '！']);
         assert_eq!(node.data.unwrap(), 0);
 
-        let node = Node::<u8, u8>::new("abcde", 1);
+        let node = Node::<u8, u8>::new("abcde", Some(1));
         assert_eq!(node.path, vec![97, 98, 99, 100, 101]);
         assert_eq!(node.data.unwrap(), 1);
 
-        let node = Node::new("abcde".as_bytes().to_vec(), 97);
+        let node = Node::new("abcde".as_bytes().to_vec(), Some(97));
         assert_eq!(node.path, vec![97, 98, 99, 100, 101]);
         assert_eq!(node.data.unwrap(), 97);
 
-        let node = Node::new("abcde".as_bytes(), 97);
+        let node = Node::new("abcde".as_bytes(), Some(97));
         assert_eq!(node.path, vec![97, 98, 99, 100, 101]);
         assert_eq!(node.data.unwrap(), 97);
     }
 
     #[test]
     fn node_insert_and_find() {
-        let mut node = Node::<char, bool>::new("你好，世界！", true);
+        let mut node = Node::<char, bool>::new("你好，世界！", Some(true));
         node.add_node("Rust", true);
 
         let n1 = node.find_node("Rust");
@@ -302,7 +302,7 @@ mod tests {
 
     #[test]
     fn node_insert_then_return_new_node() {
-        let mut tree = Node::<u8, u8>::new("", b' ');
+        let mut tree = Node::<u8, u8>::new("", Some(b' '));
 
         let a = tree.insert("a", b'a');
         let b = a.add_node("b", b'b');
@@ -350,7 +350,7 @@ mod tests {
 
     #[test]
     fn new_tree() {
-        let mut tree = Node::<char, bool>::new("", false);
+        let mut tree = Node::<char, bool>::new("", Some(false));
 
         insert_and_find!(
             tree,
@@ -433,7 +433,7 @@ mod tests {
 
     #[test]
     fn clone_node() {
-        let mut node = Node::<char, bool>::new("", false);
+        let mut node = Node::<char, bool>::new("", Some(false));
         let mut node2 = node.clone();
         assert_eq!(node, node2);
 
@@ -449,10 +449,10 @@ mod tests {
 
         let mut node = Node::<char, NodeMetadata>::new(
             "/",
-            NodeMetadata {
+            Some(NodeMetadata {
                 is_key: false,
                 params: Some(vec![]),
-            },
+            }),
         );
         let mut node2 = node.clone();
         assert_eq!(node, node2);
