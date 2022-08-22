@@ -1,4 +1,7 @@
-use std::mem;
+extern crate alloc;
+
+use core::mem;
+use alloc::vec::Vec;
 
 const fn pos<K>(l: &usize, _: &K, _: &Vec<K>) -> usize {
     *l

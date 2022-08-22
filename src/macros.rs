@@ -1,4 +1,6 @@
 use crate::Vectorable;
+use alloc::vec::Vec;
+use alloc::string::String;
 
 #[doc(hidden)]
 #[macro_export]
