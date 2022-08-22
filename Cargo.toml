@@ -1,11 +1,11 @@
 [package]
 name = "radix-tree"
-version = "0.1.0"
-authors = ["Fangdun Cai <cfddream@gmail.com>"]
+version = "0.2.0"
+authors = ["Fangdun Tsai <cfddream@gmail.com>"]
 edition = "2018"
 description = "A radix tree implementation for router, path search"
-repository = "https://github.com/trek-rs/radix-tree"
-documentation = "https://github.com/trek-rs/radix-tree/"
+documentation = "https://docs.rs/radix-tree"
+repository = "https://github.com/viz-rs/radix-tree"
 readme = "README.md"
 keywords = ["radix", "tree", "router", "trek"]
 license = "MIT/Apache-2.0"
