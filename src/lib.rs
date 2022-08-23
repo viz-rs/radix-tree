@@ -2,6 +2,7 @@
 extern crate alloc;
 
 use alloc::vec::Vec;
+use alloc::borrow::ToOwned;
 use core::mem;
 
 const fn pos<K>(l: &usize, _: &K, _: &Vec<K>) -> usize {
