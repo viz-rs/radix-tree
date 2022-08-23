@@ -9,3 +9,6 @@ repository = "https://github.com/viz-rs/radix-tree"
 readme = "README.md"
 keywords = ["radix", "tree", "router", "trek"]
 license = "MIT/Apache-2.0"
+
+[dependencies]
+log = "^0.4.17"
