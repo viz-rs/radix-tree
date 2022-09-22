@@ -1,6 +1,10 @@
+#![no_std]
 extern crate alloc;
 
+#[allow(unused_imports)] // ambiguity between `vec!` macro and `vec` module doesn't sit well with compiler
+use alloc::vec;
 use alloc::vec::Vec;
+use alloc::borrow::ToOwned;
 use core::mem;
 
 const fn pos<K>(l: &usize, _: &K, _: &Vec<K>) -> usize {
@@ -431,7 +435,7 @@ mod tests {
         let node = tree.find("你好，世界 Rust");
         assert_eq!(node.is_some(), false);
 
-        println!("{:#?}", tree);
+        log::info!("{:#?}", tree);
     }
 
     #[test]
